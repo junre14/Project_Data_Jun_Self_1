@@ -1,0 +1,141 @@
+Seluruh query yang ada
+
+-- Count finish OK
+-- Count DNF OK
+-- Count above COT OK
+-- Pace avg OK
+-- Elite vs non elite
+-- Male female
+-- Based on chip time
+-- Error chip time vs finish time
+-- Avg per country
+-- Visual point chart
+
+--view all table
+-- select * 
+-- from "Skema_2"."Skema2_Table_5K_Fixed";
+
+-- Count Finish
+-- select count(*) 
+-- from "Skema_2"."Skema2_Table_5K_Fixed"
+-- where "Skema2_Table_5K_Fixed"."Finish_Time_Fixed" <= '01:00:00';
+
+-- Count DNF
+-- select count(*)
+-- from "Skema_2"."skema2_table_5k_DNF";
+
+-- count above COT
+-- select count(*) 
+-- from "Skema_2"."Skema2_Table_5K_Fixed"
+-- where "Skema2_Table_5K_Fixed"."Finish_Time_Fixed" > '01:00:00';
+
+-- pace from finish time
+-- with pace as(
+-- with pace1 as(
+-- select 
+-- (extract(EPOCH FROM cast("Skema2_Table_5K_Fixed"."Finish_Time_Fixed" as time))/60)/5 as Decimal_Pace
+-- from "Skema_2"."Skema2_Table_5K_Fixed"
+-- )
+-- select floor(Decimal_Pace) as pace_min, 
+-- FLOOR((Decimal_Pace - FLOOR(Decimal_Pace)) * 60) AS pace_second
+-- from pace1
+-- )
+-- select pace_min, 
+-- pace_second, 
+-- LPAD(cast(pace_second as text), 2, '0') as pace_sec,
+-- concat(pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as race_pace_view,
+-- cast(concat('00',':',pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as time) as race_pace
+-- from pace
+
+-- avg pace
+-- with pace2 as(
+-- 	with pace as(
+-- 		with pace1 as(
+-- 			select 
+-- 			(extract(EPOCH FROM cast("Skema2_Table_5K_Fixed"."Finish_Time_Fixed" as time))/60)/5 as Decimal_Pace
+-- 			from "Skema_2"."Skema2_Table_5K_Fixed"
+-- 			)
+-- 		select floor(Decimal_Pace) as pace_min, 
+-- 		FLOOR((Decimal_Pace - FLOOR(Decimal_Pace)) * 60) AS pace_second
+-- 		from pace1
+-- 		)
+-- 	select pace_min, 
+-- 	pace_second, 
+-- 	LPAD(cast(pace_second as text), 2, '0') as pace_sec,
+-- 	concat(pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as race_pace_view,
+-- 	cast(concat('00',':',pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as time) as race_pace
+-- 	from pace
+-- 	)
+-- SELECT RIGHT(LEFT(cast(avg(race_pace) as text), 8),5) AS Average_Pace
+-- from pace2;
+
+-- Elite vs non elite check
+-- select distinct "Skema2_Table_5K_Fixed"."Class"
+-- from "Skema_2"."Skema2_Table_5K_Fixed";
+-- elite vs non elite avg pace
+-- with pace2 as(
+-- with pace as(
+-- 	with pace1 as(
+-- 		select TRIM(LOWER("Skema2_Table_5K_Fixed"."Class")) as gender,
+-- 		(extract(EPOCH FROM cast("Skema2_Table_5K_Fixed"."Finish_Time_Fixed" as time))/5) as Decimal_Pace
+-- 		from "Skema_2"."Skema2_Table_5K_Fixed"
+-- 		)
+-- 	select gender, avg(Decimal_Pace) as pace_sec
+-- 	from pace1
+-- 	group by gender
+-- )
+-- select gender, floor(pace_sec/60) as pace_min, 
+-- FLOOR((pace_sec - FLOOR(pace_sec)) * 60) AS pace_second
+-- from pace
+-- )
+-- select gender,
+-- concat(pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as race_pace_view,
+-- cast(concat('00',':',pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as time) as race_pace
+-- from pace2
+-- Order by race_pace_view asc;
+
+-- Error chip time vs finish time (harus dilihat lagi total yang perlu di validasi)
+-- with val as(
+-- with er as(
+-- select 
+-- 	extract(EPOCH from cast("Skema2_Table_5K_Fixed"."Chip_Time" as time)) as Chip,
+-- 	extract(EPOCH from cast("Skema2_Table_5K_Fixed"."Finish_Time_Fixed" as time)) as Fix
+-- from "Skema_2"."Skema2_Table_5K_Fixed"
+-- )
+-- select Fix-Chip as Selisih,
+-- CASE
+-- 	WHEN Fix-Chip <= 60 THEN 'AMAN'
+-- 	ELSE 'VALIDASI'
+-- END AS kategori
+-- from er
+-- )
+-- select kategori, count(kategori)
+-- from val
+-- group by kategori;
+
+-- Avg per country
+-- country check
+-- select distinct "Skema2_Table_5K_Fixed"."Country", count(*)
+-- from "Skema_2"."Skema2_Table_5K_Fixed"
+-- group by "Skema2_Table_5K_Fixed"."Country";
+-- elite vs non elite avg pace
+-- with pace2 as(
+-- with pace as(
+-- 	with pace1 as(
+-- 		select TRIM(UPPER("Skema2_Table_5K_Fixed"."Country")) as negara,
+-- 		(extract(EPOCH FROM cast("Skema2_Table_5K_Fixed"."Finish_Time_Fixed" as time))/5) as Decimal_Pace
+-- 		from "Skema_2"."Skema2_Table_5K_Fixed"
+-- 		)
+-- 	select negara, avg(Decimal_Pace) as pace_sec
+-- 	from pace1
+-- 	group by negara
+-- )
+-- select negara, floor(pace_sec/60) as pace_min, 
+-- FLOOR((pace_sec - FLOOR(pace_sec)) * 60) AS pace_second
+-- from pace
+-- )
+-- select negara,
+-- concat(pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as race_pace_view,
+-- cast(concat('00',':',pace_min, ':', LPAD(cast(pace_second as text), 2, '0')) as time) as race_pace
+-- from pace2
+-- Order by race_pace asc;
